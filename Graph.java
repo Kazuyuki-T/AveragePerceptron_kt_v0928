@@ -129,6 +129,9 @@ public class Graph extends JPanel {
             int ovalH = pointWidth;
             g2.fillOval(x, y, ovalW, ovalH);
         }
+        
+        
+        
     }
 
 //    @Override
@@ -161,6 +164,4 @@ public class Graph extends JPanel {
     public List<Double> getScores() {
         return scores;
     }
-   
-
 }

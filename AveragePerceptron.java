@@ -12,11 +12,22 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
+import java.io.*;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.awt.Graphics2D;
+
 /**
  *
  * @author Ikeda-labPC7
@@ -29,7 +40,24 @@ public class AveragePerceptron {
     public static void main(String[] args) {
         // TODO code application logic here
         
-        String csvFile = "data/data_3f_gameclear_Databalancing_pickup.csv";
+        // 結果出力用
+        // フォルダ・ログ用の名前（日時）作成
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
+        String txtfilename = simpleDateFormat.format(new Date(System.currentTimeMillis()));
+        
+        // csvデータのディレクトリ
+        String dir = "data3/";
+        
+        // 階層分計算し，
+        for(int flr = 0; flr < 4; flr++){
+            // 結果（重みなど）の文字列を返す
+            run(dir + "data_" + flr + "f_gameclear_Databalancing_pickup_onehot", dir + txtfilename);
+        }
+    }
+    
+    public static void run(String csvfilename, String txtfilename){
+        String txtFile = txtfilename + ".txt";
+        String csvFile = csvfilename + ".csv";
         BufferedReader br = null;
         String line = "";
         String csvSplitBy = ",";
@@ -142,22 +170,62 @@ public class AveragePerceptron {
 //                break;
 //            k++;
 //        }
+        
         System.out.println("Finish learning");
-        System.out.println("weight = ");
         int weightSize = avgP.avgWeight.length;
+        StringBuilder strbuilder = new StringBuilder();
+        strbuilder.append(csvFile + System.getProperty("line.separator"));
         for(int i = 0 ; i < weightSize; i++){
-            System.out.println("average weight[" + Header[i] + "] : "+avgP.avgWeight[i]);
+            strbuilder.append("average weight[" + Header[i] + "] : "+avgP.avgWeight[i] + System.getProperty("line.separator"));
         }
-        System.out.println("Correctness = " + correctratio.get(correctratio.size()-1));
+        strbuilder.append("Correctness = " + correctratio.get(correctratio.size() - 1) + System.getProperty("line.separator"));
+        strbuilder.append(System.getProperty("line.separator"));
+        
+        System.out.print(new String(strbuilder));
+        
+        // txtファイルへ結果保存
+        OutputFile(txtFile, new String(strbuilder), true);
+        
+        // グラフの表示・保存
         SwingUtilities.invokeLater(new Runnable() {
-         public void run() {
-            createAndShowGui(correctratio);
-         }
-      });
+            public void run() {
+               createAndShowGui(correctratio, csvfilename);
+            }
+        });
     }
     
+    public static void OutputFile(String name, String str, boolean tf) {
+        try {
+            File file = new File(name);
+            if (checkBeforeWritefile(file)) {
+                PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(file, tf)));
+                pw.print(str);
+                pw.close();
+            } else {
+                System.out.println("ファイルに書き込めません");
+            }
+        } catch (IOException e) {
+            System.out.println(e);
+        }
+    }
+
+    public static boolean checkBeforeWritefile(File file) {
+        if (file.exists()) {
+            if (file.isFile() && file.canWrite()) {
+                return true;
+            }
+        } else {
+            try {
+                file.createNewFile();
+                return true;
+            } catch (IOException e) {
+                System.out.println(e);
+            }
+        }
+        return false;
+    }
     
-    private static void createAndShowGui(List<Double> score) {
+    private static void createAndShowGui(List<Double> score, String str) {
 //        List<Double> scores = new ArrayList<>();
 //        Random random = new Random();
         int maxDataPoints = score.size();
@@ -174,5 +242,20 @@ public class AveragePerceptron {
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+        
+        saveImage(mainPanel, str + ".jpeg");
     }
+    
+    private static void saveImage(Graph panel , String a){
+        BufferedImage imagebuf= new BufferedImage(800,600,BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics2D = imagebuf.createGraphics();
+        panel.paint(graphics2D);
+		
+        try {
+            ImageIO.write(imagebuf,"jpeg", new File(a));
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            System.out.println("error");
+	}
+    } 
 }
