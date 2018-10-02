@@ -46,12 +46,12 @@ public class AveragePerceptron {
         String txtfilename = simpleDateFormat.format(new Date(System.currentTimeMillis()));
         
         // csvデータのディレクトリ
-        String dir = "data3/";
+        String dir = "gameclear_Databalancing_pickup_onehot_2/";
         
         // 階層分計算し，
         for(int flr = 0; flr < 4; flr++){
             // 結果（重みなど）の文字列を返す
-            run(dir + "data_" + flr + "f_gameclear_Databalancing_pickup_onehot", dir + txtfilename);
+            run(dir + "data_" + flr + "f_gameclear_Databalancing_pickup_StUn", dir + txtfilename);
         }
     }
     
@@ -117,29 +117,30 @@ public class AveragePerceptron {
 //            int j = rnd.nextInt(datasize);
             int j = k%learningdatasize;
 //            System.out.println("learning..." + k + " data [" + dataset.get(j)[0]+"," + dataset.get(j)[1] +","+ dataset.get(j)[2] + "][" + label.get(j)+"]" );
-              System.out.println("learning..." + k  );
+              //System.out.println("learning..." + k  );
+            if(k % 10000 == 0) System.out.println("learning..." + (k / 10000) + "%");
             avgP.learning(dataset.get(j), label.get(j));
             
             if(k%10000 == 0){
 //            boolean allcorrect = true;
-            int correct = 0;
-            for(int l = last10Per ; l < dataset.size() ; l++ ){
-                //int index = rnd.nextInt(dataset.size());
-//                allcorrect = allcorrect && (avgP.predict(dataset.get(l)) == label.get(l));
-                if (avgP.predict(dataset.get(l)) == label.get(l)){
-                    correct++;
-                    
+                int correct = 0;
+                for(int l = last10Per ; l < dataset.size() ; l++ ){
+                    //int index = rnd.nextInt(dataset.size());
+    //                allcorrect = allcorrect && (avgP.predict(dataset.get(l)) == label.get(l));
+                    if (avgP.predict(dataset.get(l)) == label.get(l)){
+                        correct++;
+                    }
                 }
-            }
-            System.out.println("correct ratio : " + correct);
-//                        correctratio.add(correct/(double)(datasize)); 
-            correctratio.add(correct/(double)(datasize - last10Per)); 
+                System.out.println("correct ratio : " + correct);
+    //                        correctratio.add(correct/(double)(datasize)); 
+                correctratio.add(correct/(double)(datasize - last10Per)); 
             }
             k++;
 //            if (allcorrect)
 //                break;
         }
         
+        //<editor-fold defaultstate="collapsed" desc="テスト用">
 //        avgPerceptronUnit a = new avgPerceptronUnit(3);
 //        List<Double> correctratio = new ArrayList<>();
 //        int[][] dataset = new int[][]{ {0,0,1},
@@ -170,7 +171,8 @@ public class AveragePerceptron {
 //                break;
 //            k++;
 //        }
-        
+    //</editor-fold>
+
         System.out.println("Finish learning");
         int weightSize = avgP.avgWeight.length;
         StringBuilder strbuilder = new StringBuilder();
