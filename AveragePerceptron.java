@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package averageperceptron;
+
 import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,26 +46,38 @@ public class AveragePerceptron {
         String txtfilename = simpleDateFormat.format(new Date(System.currentTimeMillis()));
         
         // csvデータのディレクトリ
-        String dir = "gameclear_Databalancing_pickup_onehot_2/";
+        String dir = "gameclear_Databalancing_pickup_onehot_st/";
         
+        // フォルダの作成
+        String folderName = dir + txtfilename;
+        File file = new File(folderName);
+        if(file.mkdir() == true){
+            // succece
+        } else {
+            System.out.println("フォルダの作成に失敗しました");
+        }
+
         // 階層分計算し，
         for(int flr = 0; flr < 4; flr++){
             // 結果（重みなど）の文字列を返す
-            run(dir + "data_" + flr + "f_gameclear_Databalancing_pickup_StUn", dir + txtfilename);
+            run(dir + "data_" + flr + "f_gameclear_Databalancing_pickup_onehot_st", folderName + "/" + txtfilename, folderName + "/" + txtfilename + "_" + flr + "f");
         }
     }
     
-    public static void run(String csvfilename, String txtfilename){
+    public static void run(String csvfilename, String txtfilename, String imgfilename){
         String txtFile = txtfilename + ".txt";
         String csvFile = csvfilename + ".csv";
         BufferedReader br = null;
         String line = "";
         String csvSplitBy = ",";
-        int col = 9; // 特徴量+ラベルの数
+        int col = 13; // 特徴量+ラベルの数
         String[] Header = new String[col];
         ArrayList<double[]> dataset = new ArrayList<>();
         ArrayList<Integer> label = new ArrayList<>(); 
         
+        
+        // csvファイルから特長量＋ラベルの読み込み
+        //<editor-fold defaultstate="collapsed" desc="データ読み込み">
         try
 	{
 		File fname = new File(csvFile);
@@ -100,19 +112,21 @@ public class AveragePerceptron {
 	{
 		System.out.println(e);
 	}
+        //</editor-fold>
+        
         
         avgPerceptronUnit avgP = new avgPerceptronUnit(dataset.get(0).length);
         List<Double> correctratio = new ArrayList<>();
         
-        int datasize = dataset.size();
-        int last10Per = (int)(dataset.size() * 0.9);
-        int learningdatasize = dataset.size()- last10Per;
+        int datasize = dataset.size(); // 全データ数
+        int last10Per = (int)(dataset.size() * 0.9); // テストデータ数
+        int learningdatasize = dataset.size() - last10Per; // 学習データ数
         Random rnd = new Random();
 //        int j;
         int k = 0;
 //        int j = 1790;
         
-        while(k < 1000000){
+        while(k < 500000){
 //            int j = rnd.nextInt(last10Per);
 //            int j = rnd.nextInt(datasize);
             int j = k%learningdatasize;
@@ -139,6 +153,7 @@ public class AveragePerceptron {
 //            if (allcorrect)
 //                break;
         }
+        
         
         //<editor-fold defaultstate="collapsed" desc="テスト用">
 //        avgPerceptronUnit a = new avgPerceptronUnit(3);
@@ -173,6 +188,7 @@ public class AveragePerceptron {
 //        }
     //</editor-fold>
 
+    
         System.out.println("Finish learning");
         int weightSize = avgP.avgWeight.length;
         StringBuilder strbuilder = new StringBuilder();
@@ -191,7 +207,7 @@ public class AveragePerceptron {
         // グラフの表示・保存
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-               createAndShowGui(correctratio, csvfilename);
+               createAndShowGui(correctratio, imgfilename);
             }
         });
     }
