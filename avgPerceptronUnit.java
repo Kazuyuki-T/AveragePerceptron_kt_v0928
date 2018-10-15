@@ -26,13 +26,17 @@ public class avgPerceptronUnit {
     }
     
     public double threshold(double a){
-        return a >= 0 ? 1: -1;
+        //System.out.println(a); 
+        //return a >= 0.0d ? 1.0d : -1.0d;
+        //return Math.abs(Math.signum(a) - 0.0) <= 0.00001 ? 1 : Math.signum(a); 
+        return (a > 0d || isDoubleValueEqual(a, 0d) == true) ? 1d : -1d;
     }
     
-    public void learning(int[] data,int label)// assume data size = wSize include bias unit
+    public boolean learning(int[] data, int label)// assume data size = wSize include bias unit
     {
             double dot = threshold(dotProduct(data, this.weight)); 
-            if(dot != label){
+            // Math.abs(dot - label) >= 0.00001
+            if(isDoubleValueEqual(dot, label) == false){
                 for(int i = 0 ; i < data.length ; i++){
                     double update = data[i] * label;
                     this.weight[i] += update;
@@ -40,13 +44,31 @@ public class avgPerceptronUnit {
                     this.avgWeight[i] = (this.allWeight[i]/ this.iteration); 
                 }
                 this.iteration ++;
+                
+                return true;
+            }
+            else{
+                return false;
             }
     }
     
-    public void learning(double[] data, double label)// assume data size = wSize include bias unit
+    public boolean learning(double[] data, double label)// assume data size = wSize include bias unit
     {
             double dot = threshold(dotProduct(data, this.weight)); 
-            if(dot != label){
+            
+//            System.out.println("dotp:" + dotProduct(data, this.weight));
+//            System.out.println("dot:" + dot);
+//            System.out.println("label:" + label);
+
+            // Math.abs(dot - label) >= 0.00001 
+            if(isDoubleValueEqual(dot, label) == false){
+//                System.out.println("dot:" + dot);
+//                for(int i = 0 ; i < data.length ; i++){
+//                    System.out.println("weight[" + i + "]:" + this.weight[i] + " * " + data[i]);    
+//                }
+//                System.out.println("label:" + label);
+//                System.out.println("|");
+
                 for(int i = 0 ; i < data.length ; i++){
                     double update = data[i] * label;
                     this.weight[i] += update;
@@ -54,44 +76,50 @@ public class avgPerceptronUnit {
                     this.avgWeight[i] = (this.allWeight[i]/ this.iteration); 
                 }
                 this.iteration ++;
+                
+//                for(int i = 0 ; i < data.length ; i++){
+//                    System.out.println("weight[" + i + "]:" + this.weight[i] + " * " + data[i]);    
+//                }
+                
+                return true;
+            }
+            else{
+                return false;
             }
     }
     
     public double predict(int[] data)
     {
-        return threshold(dotProduct(data,this.avgWeight)); 
+        return threshold(dotProduct(data, this.avgWeight)); 
     }
     
     public double predict(double[] data)
     {    
-        return threshold(dotProduct(data,this.avgWeight)); 
+        return threshold(dotProduct(data, this.avgWeight)); 
     }
             
     public double dotProduct(int[] a , double[] b)
     {
-//        if(a.length == b.length)
-//        {
             int sum = 0;
             for(int i = 0 ; i < a.length ; i ++){
                 sum +=  a[i] * b[i]; 
             }
             return sum;
-//        }
-//        else 
-//            return Integer.MIN_VALUE;
     }
     
     public double dotProduct(double[] a , double[] b) //double 入力～
     {
-//        if(a.length == b.length)
-//        {
-            int sum = 0;
-            for(int i = 0 ; i < a.length ; i ++){
-                sum +=  a[i] * b[i]; 
+            double sum = 0;
+            for(int i = 0 ; i < a.length ; i++){
+                sum +=  a[i] * b[i];
             }
             return sum;
-//        }
-//        else 
-//            return Integer.MIN_VALUE;
+    }
+    
+    // 引数として与えられた浮動小数点２値の比較
+    // ほぼ同じ：true，ことなる:false
+    public boolean isDoubleValueEqual(double dv1, double dv2){
+        if(Math.abs(dv1 - dv2) <= 0.00001)  return true;
+        else                                return false;
     }
 }

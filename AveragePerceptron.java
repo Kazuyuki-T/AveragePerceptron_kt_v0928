@@ -24,6 +24,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.io.*;
 
+import java.util.Map;
+import java.util.LinkedHashMap;
+
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.awt.Graphics2D;
@@ -33,7 +36,6 @@ import java.awt.Graphics2D;
  * @author Ikeda-labPC7
  */
 public class AveragePerceptron {
-
     /**
      * @param args the command line arguments
      */
@@ -46,7 +48,8 @@ public class AveragePerceptron {
         String txtfilename = simpleDateFormat.format(new Date(System.currentTimeMillis()));
         
         // csvデータのディレクトリ
-        String dir = "gameclear_Databalancing_pickup_onehot_st/";
+        //String dir = "gameclear_Databalancing_pickup/";
+        String dir = "iris/";
         
         // フォルダの作成
         String folderName = dir + txtfilename;
@@ -58,19 +61,34 @@ public class AveragePerceptron {
         }
 
         // 階層分計算し，
-        for(int flr = 0; flr < 4; flr++){
-            // 結果（重みなど）の文字列を返す
-            run(dir + "data_" + flr + "f_gameclear_Databalancing_pickup_onehot_st", folderName + "/" + txtfilename, folderName + "/" + txtfilename + "_" + flr + "f");
-        }
+        String csvfilenameWithDir;
+        String txtfilenameWithDir;
+        String imgfilenameWithDir;
+        char mode = 0; // 交差検証ありなし
+        int trial = 1000;
+        char check = 0; // テスト性能などの確認タイミング
+//        for(int flr = 0; flr < 4; flr++){
+//            csvfilenameWithDir = dir + "data_" + flr + "f_gameclear_Databalancing_pickup";
+//            txtfilenameWithDir = folderName + "/" + txtfilename;
+//            imgfilenameWithDir = folderName + "/" + txtfilename + "_" + flr + "f";
+//            // 結果（重みなど）の文字列を返す
+//            run(trial, mode, check, csvfilenameWithDir, txtfilenameWithDir, imgfilenameWithDir);
+//        }
+        
+        // テスト用
+        run(trial, mode, check, dir + "iris2", folderName + "/" + txtfilename, folderName + "/" + txtfilename);
+        
     }
     
-    public static void run(String csvfilename, String txtfilename, String imgfilename){
-        String txtFile = txtfilename + ".txt";
-        String csvFile = csvfilename + ".csv";
+    public static void run(int trial, int mode, char check, String csvfilename, String txtfilename, String imgfilename){
+        String txtFile = txtfilename + ".txt"; // 保存時の拡張子
+        String csvFile = csvfilename + ".csv"; // 読み込みに使用
+        //String imgFile = imgfilename + ".png";
+        
         BufferedReader br = null;
         String line = "";
         String csvSplitBy = ",";
-        int col = 13; // 特徴量+ラベルの数
+        int col = 3; // 特徴量+ラベルの数
         String[] Header = new String[col];
         ArrayList<double[]> dataset = new ArrayList<>();
         ArrayList<Integer> label = new ArrayList<>(); 
@@ -93,7 +111,7 @@ public class AveragePerceptron {
                 line = br.readLine();
                 for(int row = 1; line != null; row++)
 		{
-//                    int[] ele = new int[col];
+                    //int[] ele = new int[col];
                     double[] ele = new double[col];
                     String[] str = line.split(",", 0);
                     int i = 0;
@@ -116,42 +134,152 @@ public class AveragePerceptron {
         
         
         avgPerceptronUnit avgP = new avgPerceptronUnit(dataset.get(0).length);
-        List<Double> correctratio = new ArrayList<>();
+        Map<Integer, Double> correctRatioTesting = new LinkedHashMap<Integer, Double>(); // 汎化性能
+        Map<Integer, Double> correctRatioTestingLogarithm = new LinkedHashMap<Integer, Double>(); // 汎化性能，対数
+        Map<Integer, Double> correctRatioTrainingLogarithm = new LinkedHashMap<Integer, Double>(); // 学習時性能，対数
+        //int[] ohVisCount = new int[5]; // ワンホットな部分の訪問回数収集のため
+        Map<Integer, Map<Integer, Double>> weightTransition = new LinkedHashMap<Integer, Map<Integer, Double>>(); // 重みの推移，<重みの要素番号<回数，重み>>
+        for(int cn = 0; cn < col; cn++){
+            weightTransition.put(cn, new LinkedHashMap<Integer, Double>()); // LHMをもつLHM
+        }
+        
         
         int datasize = dataset.size(); // 全データ数
-        int last10Per = (int)(dataset.size() * 0.9); // テストデータ数
+        int last10Per = (int)(dataset.size() * 0.1); // テストデータ数
         int learningdatasize = dataset.size() - last10Per; // 学習データ数
-        Random rnd = new Random();
-//        int j;
-        int k = 0;
-//        int j = 1790;
+        System.out.println("datasize:" + datasize);
+        System.out.println("learningdatasize:" + learningdatasize);
+        System.out.println("last10Per:" + last10Per);
+        Random rnd = new Random(); // 学習データのとり方がランダムの時
+        int k = 1; // 学習回数？
+        int n = 1; // 対数データ収集の判定に使用
         
-        while(k < 500000){
-//            int j = rnd.nextInt(last10Per);
-//            int j = rnd.nextInt(datasize);
-            int j = k%learningdatasize;
-//            System.out.println("learning..." + k + " data [" + dataset.get(j)[0]+"," + dataset.get(j)[1] +","+ dataset.get(j)[2] + "][" + label.get(j)+"]" );
-              //System.out.println("learning..." + k  );
-            if(k % 10000 == 0) System.out.println("learning..." + (k / 10000) + "%");
-            avgP.learning(dataset.get(j), label.get(j));
+        
+        //<editor-fold defaultstate="collapsed" desc="学習データ順序のシャッフル">
+        
+        // 順序入れ替え
+        
+        //</editor-fold>
+        
+        
+        //<editor-fold defaultstate="collapsed" desc="n-folds，未完">
+        // 優先度：低，n-folds
+        if(mode == 0){
+            // hold-out
             
-            if(k%10000 == 0){
-//            boolean allcorrect = true;
-                int correct = 0;
-                for(int l = last10Per ; l < dataset.size() ; l++ ){
-                    //int index = rnd.nextInt(dataset.size());
-    //                allcorrect = allcorrect && (avgP.predict(dataset.get(l)) == label.get(l));
-                    if (avgP.predict(dataset.get(l)) == label.get(l)){
-                        correct++;
+        }else{
+            // n-folds
+            // 学習データをn分割し，順にテストデータ，学習データとする
+            int divNum = 10;
+            for(int i=0; i<n; i++){
+                
+            }
+        }
+        //</editor-fold>
+        
+        
+        while(k <= trial){
+            //int j = rnd.nextInt(last10Per);
+            //int j = rnd.nextInt(datasize);
+            //int j = rnd.nextInt(learningdatasize);
+            int j = k % learningdatasize;
+            
+            
+            //System.out.println("learning..." + k + " data [" + dataset.get(j)[0] + "," + dataset.get(j)[1] +","+ dataset.get(j)[2] + "][" + label.get(j)+"]" );
+//            System.out.print("learning..." + k + " data [");
+//            for(int i = 0; i < col; i++){
+//                System.out.print(dataset.get(j)[i] + ", ");
+//            }
+//            System.out.println("][" + label.get(j)+"]" );
+            //System.out.println("learning..." + k  );
+            
+            
+            
+//            for(int n=0; n<5; n++){
+//                ohVisCount[n] += (int)(dataset.get(j)[n + 4] + 0.5);
+//            }
+            
+            
+            // true:更新あり,false:更新なし
+            boolean updateFlag = avgP.learning(dataset.get(j), label.get(j));
+            
+            if(check == 0){
+                //<editor-fold defaultstate="collapsed" desc="毎回">
+                // 汎化性能
+                if((k % (trial / 100) == 0 || k == trial)){
+                    //boolean allcorrect = true;
+                    int correct = 0;
+                    for(int l = learningdatasize; l < dataset.size(); l++){
+                        //int index = rnd.nextInt(dataset.size());
+                        //allcorrect = allcorrect && (avgP.predict(dataset.get(l)) == label.get(l));
+
+                        //if (Math.abs(avgP.predict(dataset.get(l)) - label.get(l)) < 0.00001) correct++;
+                        if(isDoubleValueEqual(avgP.predict(dataset.get(l)), label.get(l)) == true) correct++;
+                    }
+                    System.out.println("learning..." + (k / (trial / 100)) + "%");
+                    System.out.println("correct ratio : " + correct);
+
+                    correctRatioTesting.put(k, correct/(double)(last10Per));
+                    
+                    // 重みの推移の記録
+                    for(int cn = 0; cn < col; cn++){
+                        weightTransition.get(cn).put(k, avgP.weight[cn]); // key:cnのLHMに追加
                     }
                 }
-                System.out.println("correct ratio : " + correct);
-    //                        correctratio.add(correct/(double)(datasize)); 
-                correctratio.add(correct/(double)(datasize - last10Per)); 
+                k++;
+                //</editor-fold>
             }
-            k++;
+            else if(check == 1){
+                //<editor-fold defaultstate="collapsed" desc="重み更新時のみ">
+                // 汎化性能の確認
+                if((k % (trial / 100) == 0 || k == trial) && updateFlag == true){
+                    //boolean allcorrect = true;
+                    int correct = 0;
+                    for(int l = learningdatasize; l < dataset.size(); l++){
+                        //int index = rnd.nextInt(dataset.size());
+                        //allcorrect = allcorrect && (avgP.predict(dataset.get(l)) == label.get(l));
+
+                        //if (Math.abs(avgP.predict(dataset.get(l)) - label.get(l)) < 0.00001) correct++;
+                        if(isDoubleValueEqual(avgP.predict(dataset.get(l)), label.get(l)) == true) correct++;
+                    }
+                    System.out.println("learning..." + (k / (trial / 100)) + "%");
+                    System.out.println("correct ratio : " + correct);
+
+                    correctRatioTesting.put(k, correct/(double)(last10Per)); 
+                }
+                // 対数
+                int npow10 = (int)(Math.pow(10, n));
+                if(k <= npow10 && k % (int)(Math.pow(10, n-1)) == 0 && updateFlag == true){
+                    int correct; // 正負判定が正しいときカウント
+
+                    // 汎化性能の確認
+                    correct = 0;
+                    for(int l = learningdatasize; l < dataset.size(); l++){
+                        //if (Math.abs(avgP.predict(dataset.get(l)) - label.get(l)) < 0.00001) correct++;
+                        if(isDoubleValueEqual(avgP.predict(dataset.get(l)), label.get(l)) == true) correct++;
+                    }
+                    correctRatioTestingLogarithm.put(k, correct/(double)(last10Per));
+
+                    // 学習時性能の確認
+                    correct = 0;
+                    for(int l = 0; l < learningdatasize; l++){
+                        //if (Math.abs(avgP.predict(dataset.get(l)) - label.get(l)) < 0.00001) correct++;
+                        if(isDoubleValueEqual(avgP.predict(dataset.get(l)), label.get(l)) == true) correct++;
+                    }
+                    correctRatioTrainingLogarithm.put(k, correct/(double)(learningdatasize));
+
+                    if(k == npow10) n++; // 次の対数の位？へ
+                }
+                if(updateFlag == true) k++; // 学習回数のカウント
+                //</editor-fold>
+            }
+            
+            
+            
 //            if (allcorrect)
 //                break;
+
+
         }
         
         
@@ -189,6 +317,7 @@ public class AveragePerceptron {
     //</editor-fold>
 
     
+        //<editor-fold defaultstate="collapsed" desc="重みテキスト＆コンソール出力">
         System.out.println("Finish learning");
         int weightSize = avgP.avgWeight.length;
         StringBuilder strbuilder = new StringBuilder();
@@ -196,18 +325,53 @@ public class AveragePerceptron {
         for(int i = 0 ; i < weightSize; i++){
             strbuilder.append("average weight[" + Header[i] + "] : "+avgP.avgWeight[i] + System.getProperty("line.separator"));
         }
-        strbuilder.append("Correctness = " + correctratio.get(correctratio.size() - 1) + System.getProperty("line.separator"));
+        
+        strbuilder.append("Correctness = " + correctRatioTesting.get(trial) + System.getProperty("line.separator"));
+//        for(int i = 0 ; i < weightSize; i++){
+//            strbuilder.append("weight[" + Header[i] + "] : "+avgP.weight[i] + System.getProperty("line.separator"));
+//        }
+//        strbuilder.append(avgP.iteration + System.getProperty("line.separator"));
+        strbuilder.append(System.getProperty("line.separator"));
+        // 汎化性能，対数
+        strbuilder.append("Testing - Correct Ratio" + System.getProperty("line.separator"));
+        for(Map.Entry<Integer, Double> entry : correctRatioTestingLogarithm.entrySet()){
+            strbuilder.append(entry.getKey() + "," + entry.getValue() + System.getProperty("line.separator"));
+        }
+        strbuilder.append(System.getProperty("line.separator"));
+        // 学習時性能，対数
+        strbuilder.append("Training - Correct Ratio" + System.getProperty("line.separator"));
+        for(Map.Entry<Integer, Double> entry : correctRatioTrainingLogarithm.entrySet()){
+            strbuilder.append(entry.getKey() + "," + entry.getValue() + System.getProperty("line.separator"));
+        }
         strbuilder.append(System.getProperty("line.separator"));
         
+        // 最終的な出力
         System.out.print(new String(strbuilder));
+        OutputFile(txtFile, new String(strbuilder), true); // txtファイルへ結果保存
+        //</editor-fold>
+
+        System.out.println("weight");
+        for(Map.Entry<Integer, Double> entry : weightTransition.get(0).entrySet()){
+            System.out.println(entry.getKey() + "," + entry.getValue());
+        }
         
-        // txtファイルへ結果保存
-        OutputFile(txtFile, new String(strbuilder), true);
+        
+        
+        
+//        for(int n=0; n<5; n++){
+//            System.out.println(n + ":" + ohVisCount[n]);
+//        }
+        
+
+
         
         // グラフの表示・保存
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-               createAndShowGui(correctratio, imgfilename);
+               createAndShowGui(correctRatioTesting, imgfilename, 0);
+               createAndShowGui(correctRatioTestingLogarithm, imgfilename + "_Testing", 0);
+               createAndShowGui(correctRatioTrainingLogarithm, imgfilename + "_Training", 0);
+               createAndShowGui(weightTransition.get(0), imgfilename + "_weight", 1);
             }
         });
     }
@@ -243,25 +407,27 @@ public class AveragePerceptron {
         return false;
     }
     
-    private static void createAndShowGui(List<Double> score, String str) {
+    private static void createAndShowGui(Map<Integer, Double> map, String str, char mode) {
 //        List<Double> scores = new ArrayList<>();
 //        Random random = new Random();
-        int maxDataPoints = score.size();
-        int maxScore = 1;
+//        int maxDataPoints = score.size();
+//        int maxScore = 1;
 //        for (int i = 0; i < maxDataPoints; i++) {
 //            scores.add((double) random.nextDouble() * maxScore);
 ////            scores.add((double) i);
 //        }
-        Graph mainPanel = new Graph(score);
+
+        // map -> list
+        List<Double> score = new ArrayList<>(map.values());
+        Graph mainPanel = new Graph(score, mode);
         mainPanel.setPreferredSize(new Dimension(800, 600));
-        JFrame frame = new JFrame("DrawGraph");
+        JFrame frame = new JFrame(str);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().add(mainPanel);
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
-        
-        saveImage(mainPanel, str + ".jpeg");
+        saveImage(mainPanel, str + ".png");
     }
     
     private static void saveImage(Graph panel , String a){
@@ -276,4 +442,11 @@ public class AveragePerceptron {
             System.out.println("error");
 	}
     } 
+    
+    // 引数として与えられた浮動小数点２値の比較
+    // ほぼ同じ：true，ことなる:false
+    public static boolean isDoubleValueEqual(double dv1, double dv2){
+        if(Math.abs(dv1 - dv2) <= 0.00001)  return true;
+        else                                return false;
+    }
 }
