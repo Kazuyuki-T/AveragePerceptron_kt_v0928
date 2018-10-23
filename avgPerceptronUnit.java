@@ -10,10 +10,11 @@
  * @author Ikeda-labPC7
  */
 public class avgPerceptronUnit {
-    double[] weight;
-    double[] allWeight;
-    double[] avgWeight;
+    double[] weight; // 重み
+    double[] allWeight; // 重みの合計
+    double[] avgWeight; // 重みの平均
     int iteration;
+    double eta; // 学習率
     
     public avgPerceptronUnit(int wSize){
         this.weight = new double[wSize];
@@ -23,6 +24,24 @@ public class avgPerceptronUnit {
         this.allWeight[wSize-1] = 1;
         this.avgWeight[wSize-1] = 1;
         this.iteration = 1;
+        this.eta = 1.0;
+    }
+    
+    public avgPerceptronUnit(int wSize, double[] initw){
+        this.weight = new double[wSize];
+        this.allWeight = new double[wSize];
+        this.avgWeight = new double[wSize];
+        this.weight[wSize-1] = 1;
+        this.allWeight[wSize-1] = 1;
+        this.avgWeight[wSize-1] = 1;
+        this.iteration = 1;
+        this.eta = 1.0;
+        
+        // 重みの初期値設定
+        for(int i = 0; i < this.weight.length; i++){
+            this.weight[i] = initw[i];
+            this.allWeight[i] = this.weight[i];
+        }
     }
     
     public double threshold(double a){
@@ -38,7 +57,7 @@ public class avgPerceptronUnit {
             // Math.abs(dot - label) >= 0.00001
             if(isDoubleValueEqual(dot, label) == false){
                 for(int i = 0 ; i < data.length ; i++){
-                    double update = data[i] * label;
+                    double update = eta * data[i] * label;
                     this.weight[i] += update;
                     this.allWeight[i] += this.weight[i];
                     this.avgWeight[i] = (this.allWeight[i]/ this.iteration); 
