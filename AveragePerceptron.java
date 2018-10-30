@@ -47,12 +47,13 @@ public class AveragePerceptron {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
         String txtfilename = simpleDateFormat.format(new Date(System.currentTimeMillis()));
         
-        String name = "gameclear_Databalancing_pickup"; // 0
+        //String name = "gameclear_Databalancing_pickup"; // 0
         //String name = "gameclear_Databalancing_pickup_onehot_pt"; // 2-1
         //String name = "gameclear_Databalancing_pickup_onehot_st"; // 2-2
-        //String name = "gameclear_Databalancing_pickup_onehot_ar"; // 2-3
+        String name = "gameclear_Databalancing_pickup_onehot_ar"; // 2-3
         //String name = "gameclear_Databalancing_pickup_onehot_ptstar"; // 2-4
         //String name = "iris"; // test
+        //String name = "gameclear_Databalancing_pickup_onehot_ar_dataadd2";
         
         // csvデータのディレクトリ
         String dir = name + "/";
@@ -73,7 +74,7 @@ public class AveragePerceptron {
         int mode = 0; // 交差検証ありなし
         int trial = 1000;
         int check = 0; // テスト性能などの確認タイミング
-        int col = 9; // 特徴量+ラベルの数
+        int col = 13; // 特徴量+ラベルの数
         for(int flr = 0; flr < 4; flr++){
             csvfilenameWithDir = dir + "data_" + flr + "f_" + name;
             txtfilenameWithDir = folderName + "/" + txtfilename;
@@ -83,8 +84,8 @@ public class AveragePerceptron {
         }
         
         // テスト用
-        //run(trial, mode, check, col, dir + "iris2", folderName + "/" + txtfilename, folderName + "/" + txtfilename);
-        
+        //run(trial, mode, check, col, dir + "iris2", folderName + "/" + txtfilename, folderName + "/" + txtfilename, false);
+        //run(trial, mode, check, 13, dir + "data_2f_" + name, folderName + "/" + txtfilename, folderName + "/" + txtfilename + "_2f", false);
     }
     
     public static void run(int trial, int mode, int check, int col, String csvfilename, String txtfilename, String imgfilename, boolean graphOutputFlag){
@@ -168,12 +169,13 @@ public class AveragePerceptron {
         
         avgPerceptronUnit avgP = new avgPerceptronUnit(dataset.get(0).length, initWeight);
         Map<Integer, Double> correctRatioTesting = new LinkedHashMap<Integer, Double>(); // 汎化性能
+        Map<Integer, Double> correctRatioTraining = new LinkedHashMap<Integer, Double>(); // 学習時性能
+        Map<Integer, Double> correctRatioTestingLogarithm = new LinkedHashMap<Integer, Double>(); // 汎化性能，対数
+        Map<Integer, Double> correctRatioTrainingLogarithm = new LinkedHashMap<Integer, Double>(); // 学習時性能，対数
         Map<Integer, Double> precisionTesting = new LinkedHashMap<Integer, Double>(); // 精度
         Map<Integer, Double> recallTesting = new LinkedHashMap<Integer, Double>(); // 再現性
         Map<Integer, Double> f_measureTesting = new LinkedHashMap<Integer, Double>(); // f値
-        Map<Integer, Double> correctRatioTestingLogarithm = new LinkedHashMap<Integer, Double>(); // 汎化性能，対数
-        Map<Integer, Double> correctRatioTrainingLogarithm = new LinkedHashMap<Integer, Double>(); // 学習時性能，対数
-        //int[] ohVisCount = new int[5]; // ワンホットな部分の訪問回数収集のため
+        int[] ohVisCount = new int[5]; // ワンホットな部分の訪問回数収集のため
         Map<Integer, Map<Integer, Double>> weightTransition = new LinkedHashMap<Integer, Map<Integer, Double>>(); // 重みの推移，<重みの要素番号<回数，重み>>
         Map<Integer, Map<Integer, Double>> weightTransitionLogarithm = new LinkedHashMap<Integer, Map<Integer, Double>>(); // 重みの推移，<重みの要素番号<回数，重み>>, 対数
         Map<Integer, Map<Integer, Double>> avgWeightTransition = new LinkedHashMap<Integer, Map<Integer, Double>>(); // 重みの推移，<重みの要素番号<回数，重み>>
@@ -232,6 +234,11 @@ public class AveragePerceptron {
             j++; // 学習データのインデックスを次に変更
             if(j == learningdatasize){ j = 0; k++; } // 学習データが一周したとき，最初から＆ステップ数更新
             
+            // 重みの訪問回数記録
+            for(int wn = 0; wn < 5; wn++){
+                ohVisCount[wn] += (int)(dataset.get(j)[wn + 4] + 0.5);
+            }
+            
             //<editor-fold defaultstate="collapsed" desc="データ記録">
             // 100点刻み，汎化性能，再現性等
             if ((learningCount % (learningdatasize * trial / 100) == 0)) {
@@ -240,6 +247,8 @@ public class AveragePerceptron {
                 int trueNegNum = 0; // 負例を負例と判定した正解数 
                 int posTestDataSize = 0; // 正例のテストデータ数
                 int negTestDataSize = 0; // 負例のテストデータ数
+                
+                // 汎化性能の測定
                 for (int l = learningdatasize; l < dataset.size(); l++) {
                     // 判定が正しいとき，カウント＆TFTN収集
                     if (isDoubleValueEqual(avgP.predict(dataset.get(l)), label.get(l)) == true) {
@@ -252,7 +261,7 @@ public class AveragePerceptron {
                     if (label.get(l) == 1)  posTestDataSize++;
                     if (label.get(l) == -1) negTestDataSize++;
                 }
-
+                
                 int testDataSize = last10Per;
                 int falsePosNum = testDataSize - posTestDataSize - trueNegNum;
                 int falseNegNum = testDataSize - negTestDataSize - truePosNum;
@@ -271,6 +280,16 @@ public class AveragePerceptron {
                 precisionTesting.put(learningCount, precision);
                 recallTesting.put(learningCount, recall);
                 f_measureTesting.put(learningCount, f_measure);
+
+                // 学習時性能の測定
+                correct = 0;
+                for (int l = 0; l < learningdatasize; l++) {
+                    //if (Math.abs(avgP.predict(dataset.get(l)) - label.get(l)) < 0.00001) correct++;
+                    if (isDoubleValueEqual(avgP.predict(dataset.get(l)), label.get(l)) == true) {
+                        correct++;
+                    }
+                }
+                correctRatioTraining.put(learningCount, correct / (double)(learningdatasize));
 
                 // 重みの推移の記録
                 for (int wn = 0; wn < avgP.weight.length; wn++) {
@@ -534,43 +553,31 @@ public class AveragePerceptron {
         
         System.out.println("\n//----- result -----//");
         int weightSize = avgP.avgWeight.length;
-        StringBuilder strbuilder = new StringBuilder();
+        StringBuilder strbuilder;
+        
+        
+        // 最終的な重み，平均重み等
+        strbuilder = new StringBuilder();
         strbuilder.append(csvFile + System.getProperty("line.separator"));
         for(int i = 0 ; i < weightSize; i++){
-            strbuilder.append("weight[" + Header[i] + "] : "+avgP.weight[i] + System.getProperty("line.separator"));
+            strbuilder.append("weight[" + Header[i] + "],"+avgP.weight[i] + System.getProperty("line.separator"));
         }
         for(int i = 0 ; i < weightSize; i++){
-            strbuilder.append("average weight[" + Header[i] + "] : "+avgP.avgWeight[i] + System.getProperty("line.separator"));
+            strbuilder.append("average weight[" + Header[i] + "],"+avgP.avgWeight[i] + System.getProperty("line.separator"));
         }
+        strbuilder.append("Correctness," + correctRatioTesting.get(learningCount) + System.getProperty("line.separator"));
+        strbuilder.append(System.getProperty("line.separator"));
+        for(int wn=0; wn<5; wn++){
+            strbuilder.append("visitCount_weight[" + (wn+4) + "]," + ohVisCount[wn] + System.getProperty("line.separator"));
+        }
+        OutputFile(txtfilename + "_result.csv", new String(strbuilder), true);
         
-        strbuilder.append("Correctness = " + correctRatioTesting.get(learningCount) + System.getProperty("line.separator"));
-//        for(int i = 0 ; i < weightSize; i++){
-//            strbuilder.append("weight[" + Header[i] + "] : "+avgP.weight[i] + System.getProperty("line.separator"));
-//        }
-//        strbuilder.append(avgP.iteration + System.getProperty("line.separator"));
-        strbuilder.append(System.getProperty("line.separator"));
-        // 汎化性能，対数
-        strbuilder.append("Testing - Correct Ratio" + System.getProperty("line.separator"));
-        for(Map.Entry<Integer, Double> entry : correctRatioTestingLogarithm.entrySet()){
-            strbuilder.append(entry.getKey() + "," + entry.getValue() + System.getProperty("line.separator"));
-        }
-        strbuilder.append(System.getProperty("line.separator"));
-        // 学習時性能，対数
-        strbuilder.append("Training - Correct Ratio" + System.getProperty("line.separator"));
-        for(Map.Entry<Integer, Double> entry : correctRatioTrainingLogarithm.entrySet()){
-            strbuilder.append(entry.getKey() + "," + entry.getValue() + System.getProperty("line.separator"));
-        }
-        strbuilder.append(System.getProperty("line.separator"));
-        // 重みの推移，対数
-        for(int wn = 0; wn < avgP.weight.length; wn++){
-            strbuilder.append("weight[" + wn + "]" + System.getProperty("line.separator"));
-            for(Map.Entry<Integer, Double> entry : weightTransitionLogarithm.get(wn).entrySet()){
-                strbuilder.append(entry.getKey() + "," + entry.getValue() + System.getProperty("line.separator"));
-            }
-            strbuilder.append(System.getProperty("line.separator"));
-        }
-        strbuilder.append(System.getProperty("line.separator"));
-        // 重みの推移，100分割
+        System.out.print(new String(strbuilder)); // 最終的な出力
+        
+        
+        // 重みの推移
+        strbuilder = new StringBuilder();
+        strbuilder.append(csvFile + System.getProperty("line.separator"));
         for(int wn = 0; wn < avgP.weight.length; wn++){
             strbuilder.append("weight[" + wn + "]" + System.getProperty("line.separator"));
             for(Map.Entry<Integer, Double> entry : weightTransition.get(wn).entrySet()){
@@ -579,16 +586,26 @@ public class AveragePerceptron {
             strbuilder.append(System.getProperty("line.separator"));
         }
         strbuilder.append(System.getProperty("line.separator"));
+        OutputFile(txtfilename + "_weight.csv", new String(strbuilder), true);
+        
+        
         // 重みの推移，対数
+        strbuilder = new StringBuilder();
+        strbuilder.append(csvFile + System.getProperty("line.separator"));
         for(int wn = 0; wn < avgP.weight.length; wn++){
-            strbuilder.append("average weight[" + wn + "]" + System.getProperty("line.separator"));
-            for(Map.Entry<Integer, Double> entry : avgWeightTransitionLogarithm.get(wn).entrySet()){
+            strbuilder.append("weight[" + wn + "]" + System.getProperty("line.separator"));
+            for(Map.Entry<Integer, Double> entry : weightTransitionLogarithm.get(wn).entrySet()){
                 strbuilder.append(entry.getKey() + "," + entry.getValue() + System.getProperty("line.separator"));
             }
             strbuilder.append(System.getProperty("line.separator"));
         }
         strbuilder.append(System.getProperty("line.separator"));
-        // 重みの推移，100分割
+        OutputFile(txtfilename + "_weightLogarithm.csv", new String(strbuilder), true);
+        
+        
+        // 平均重みの推移，100分割
+        strbuilder = new StringBuilder();
+        strbuilder.append(csvFile + System.getProperty("line.separator"));
         for(int wn = 0; wn < avgP.weight.length; wn++){
             strbuilder.append("average weight[" + wn + "]" + System.getProperty("line.separator"));
             for(Map.Entry<Integer, Double> entry : avgWeightTransition.get(wn).entrySet()){
@@ -597,17 +614,74 @@ public class AveragePerceptron {
             strbuilder.append(System.getProperty("line.separator"));
         }
         strbuilder.append(System.getProperty("line.separator"));
+        OutputFile(txtfilename + "_avgweight.csv", new String(strbuilder), true);
+
         
-        // 最終的な出力
-        System.out.print(new String(strbuilder));
-        OutputFile(txtFile, new String(strbuilder), true); // txtファイルへ結果保存
+        // 平均重みの推移，対数
+        strbuilder = new StringBuilder();
+        strbuilder.append(csvFile + System.getProperty("line.separator"));
+        for(int wn = 0; wn < avgP.weight.length; wn++){
+            strbuilder.append("average weight[" + wn + "]" + System.getProperty("line.separator"));
+            for(Map.Entry<Integer, Double> entry : avgWeightTransitionLogarithm.get(wn).entrySet()){
+                strbuilder.append(entry.getKey() + "," + entry.getValue() + System.getProperty("line.separator"));
+            }
+            strbuilder.append(System.getProperty("line.separator"));
+        }
+        strbuilder.append(System.getProperty("line.separator"));
+        OutputFile(txtfilename + "_avgweightLogarithm.csv", new String(strbuilder), true);
+        
+        
+        // 汎化性能
+        strbuilder = new StringBuilder();
+        strbuilder.append(csvFile + System.getProperty("line.separator"));
+        for(Map.Entry<Integer, Double> entry : correctRatioTesting.entrySet()){
+            strbuilder.append(entry.getKey() + "," + entry.getValue() + System.getProperty("line.separator"));
+        }
+        strbuilder.append(System.getProperty("line.separator"));
+        OutputFile(txtfilename + "_testing.csv", new String(strbuilder), true);
+        
+        
+        // 汎化性能，対数
+        strbuilder = new StringBuilder();
+        strbuilder.append(csvFile + System.getProperty("line.separator"));
+        for(Map.Entry<Integer, Double> entry : correctRatioTestingLogarithm.entrySet()){
+            strbuilder.append(entry.getKey() + "," + entry.getValue() + System.getProperty("line.separator"));
+        }
+        strbuilder.append(System.getProperty("line.separator"));
+        OutputFile(txtfilename + "_testingLogarithm.csv", new String(strbuilder), true);
+        
+        
+        // 学習時性能
+        strbuilder = new StringBuilder();
+        strbuilder.append(csvFile + System.getProperty("line.separator"));
+        for(Map.Entry<Integer, Double> entry : correctRatioTraining.entrySet()){
+            strbuilder.append(entry.getKey() + "," + entry.getValue() + System.getProperty("line.separator"));
+        }
+        strbuilder.append(System.getProperty("line.separator"));
+        OutputFile(txtfilename + "_training.csv", new String(strbuilder), true);
+        
+        
+        // 学習時性能，対数
+        strbuilder = new StringBuilder();
+        strbuilder.append(csvFile + System.getProperty("line.separator"));
+        for(Map.Entry<Integer, Double> entry : correctRatioTrainingLogarithm.entrySet()){
+            strbuilder.append(entry.getKey() + "," + entry.getValue() + System.getProperty("line.separator"));
+        }
+        strbuilder.append(System.getProperty("line.separator"));
+        OutputFile(txtfilename + "_trainingLogarithm.csv", new String(strbuilder), true);
+        
+        
+//        for(int i = 0 ; i < weightSize; i++){
+//            strbuilder.append("weight[" + Header[i] + "] : "+avgP.weight[i] + System.getProperty("line.separator"));
+//        }
+//        strbuilder.append(avgP.iteration + System.getProperty("line.separator"));
+        
+        
         //</editor-fold>
 
 
         
-//        for(int n=0; n<5; n++){
-//            System.out.println(n + ":" + ohVisCount[n]);
-//        }
+
         
 
         
