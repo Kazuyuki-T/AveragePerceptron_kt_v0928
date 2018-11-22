@@ -53,7 +53,9 @@ public class AveragePerceptron {
         //String name = "gameclear_Databalancing_pickup_onehot_ar"; // 2-3
         //String name = "gameclear_Databalancing_pickup_onehot_ptstar"; // 2-4
         //String name = "iris"; // test
-        String name = "gameclear_Databalancing_pickup_onehot_ar_dataadd4";
+        //String name = "gameclear_Databalancing_pickup_onehot_ar_dataadd4";
+        String name = "gameclear_Databalancing_pickup_onehot_st";
+        //String name = "gameclear_Databalancing_pickup";
         
         // csvデータのディレクトリ
         String dir = name + "/";
@@ -75,17 +77,17 @@ public class AveragePerceptron {
         int trial = 1000;
         int check = 0; // テスト性能などの確認タイミング
         int col = 13; // 特徴量+ラベルの数
-//        for(int flr = 0; flr < 4; flr++){
-//            csvfilenameWithDir = dir + "data_" + flr + "f_" + name;
-//            txtfilenameWithDir = folderName + "/" + txtfilename;
-//            imgfilenameWithDir = folderName + "/" + txtfilename + "_" + flr + "f";
-//            // 学習回数，学習方法，確認タイミング，重みの数（特長量＋ラベル），ファイルネーム×３，グラフ表示の有り無し
-//            run(trial, mode, check, col, csvfilenameWithDir, txtfilenameWithDir, imgfilenameWithDir, false);
-//        }
+        for(int flr = 0; flr < 4; flr++){
+            csvfilenameWithDir = dir + "data_" + flr + "f_" + name;
+            txtfilenameWithDir = folderName + "/" + txtfilename;
+            imgfilenameWithDir = folderName + "/" + txtfilename + "_" + flr + "f";
+            // 学習回数，学習方法，確認タイミング，重みの数（特長量＋ラベル），ファイルネーム×３，グラフ表示の有り無し
+            run(trial, mode, check, col, csvfilenameWithDir, txtfilenameWithDir, imgfilenameWithDir, false);
+        }
         
         // テスト用
         //run(trial, mode, check, col, dir + "iris2", folderName + "/" + txtfilename, folderName + "/" + txtfilename, false);
-        run(trial, mode, check, 13, dir + "data_2f_" + name, folderName + "/" + txtfilename, folderName + "/" + txtfilename + "_2f", false);
+        //run(trial, mode, check, 13, dir + "data_2f_" + name, folderName + "/" + txtfilename, folderName + "/" + txtfilename + "_2f", false);
     }
     
     public static void run(int trial, int mode, int check, int col, String csvfilename, String txtfilename, String imgfilename, boolean graphOutputFlag){
@@ -236,7 +238,7 @@ public class AveragePerceptron {
             
             // 重みの訪問回数記録
             for(int wn = 0; wn < 5; wn++){
-                ohVisCount[wn] += (int)(dataset.get(j)[wn + 4] + 0.5);
+                ohVisCount[wn] += (int)(dataset.get(j)[wn + 5] + 0.5);
             }
             
             //<editor-fold defaultstate="collapsed" desc="データ記録">
