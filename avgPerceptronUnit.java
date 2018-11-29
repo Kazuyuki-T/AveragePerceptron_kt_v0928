@@ -1,3 +1,6 @@
+
+import java.util.Random;
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -15,6 +18,7 @@ public class avgPerceptronUnit {
     double[] avgWeight; // 重みの平均
     int iteration;
     double eta; // 学習率
+    Random rnd = new Random();
     
     public avgPerceptronUnit(int wSize){
         this.weight = new double[wSize];
@@ -24,19 +28,19 @@ public class avgPerceptronUnit {
         this.allWeight[wSize-1] = 1;
         this.avgWeight[wSize-1] = 1;
         this.iteration = 1;
-        this.eta = 1.0;
+        this.eta = 0.1;
     }
     
-    public avgPerceptronUnit(int wSize, double[] initw){
-        this.weight = new double[wSize];
-        this.allWeight = new double[wSize];
-        this.avgWeight = new double[wSize];
-        this.weight[wSize-1] = 1;
-        this.allWeight[wSize-1] = 1;
-        this.avgWeight[wSize-1] = 1;
-        this.iteration = 1;
-        this.eta = 1.0;
-        
+    public void init(){
+        // 重みの初期値設定
+        for(int i = 0; i < this.weight.length; i++){
+            this.weight[i] = 0;//rnd.nextInt(2000) - 1000;
+            this.allWeight[i] = this.weight[i];
+            System.out.print(this.weight[i] + ",");
+        }
+    }
+    
+    public void init(double[] initw){
         // 重みの初期値設定
         for(int i = 0; i < this.weight.length; i++){
             this.weight[i] = initw[i];
@@ -109,14 +113,21 @@ public class avgPerceptronUnit {
     
     public double predict(int[] data)
     {
-        return threshold(dotProduct(data, this.avgWeight)); 
+        //return threshold(dotProduct(data, this.avgWeight));
+        return threshold(dotProduct(data, this.weight));
     }
     
     public double predict(double[] data)
     {    
-        return threshold(dotProduct(data, this.avgWeight)); 
+        //return threshold(dotProduct(data, this.avgWeight));
+        return threshold(dotProduct(data, this.weight));
     }
-            
+    
+    public double predictAvgWeight(double[] data)
+    {    
+        return threshold(dotProduct(data, this.avgWeight));
+    }
+    
     public double dotProduct(int[] a , double[] b)
     {
             int sum = 0;
