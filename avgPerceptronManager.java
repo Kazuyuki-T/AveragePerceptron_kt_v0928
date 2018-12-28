@@ -75,7 +75,8 @@ public class avgPerceptronManager {
                     }
                     ele[str.length - 1] = 1;
                     dataset.add(ele);
-                    label.add(Integer.parseInt(str[str.length - 1]));
+                    label.add((int)Double.parseDouble(str[str.length - 1]));
+                    //label.add(Integer.parseInt(str[str.length - 1]));
                     line = br.readLine();
 		}
 		br.close();
@@ -128,7 +129,8 @@ public class avgPerceptronManager {
         Map<Integer, Double> precisionTesting = new LinkedHashMap<Integer, Double>(); // 精度
         Map<Integer, Double> recallTesting = new LinkedHashMap<Integer, Double>(); // 再現性
         Map<Integer, Double> f_measureTesting = new LinkedHashMap<Integer, Double>(); // f値
-        int[] ohVisCount = new int[5]; // ワンホットな部分の訪問回数収集のため
+        int[] ohVisCount = new int[11]; // ワンホットな部分の訪問回数収集のため
+        int ohVis_BIAS = 0;
         Map<Integer, Map<Integer, Double>> weightTransition = new LinkedHashMap<Integer, Map<Integer, Double>>(); // 重みの推移，<重みの要素番号<回数，重み>>
         Map<Integer, Map<Integer, Double>> avgWeightTransition = new LinkedHashMap<Integer, Map<Integer, Double>>(); // 重みの推移，<重みの要素番号<回数，重み>>
         for(int cn = 0; cn < col; cn++){
@@ -213,8 +215,8 @@ public class avgPerceptronManager {
                 learningCount++; // 学習回数のカウント
                 
                 // 重みの訪問回数記録
-                for(int wn = 0; wn < 5; wn++){
-                    ohVisCount[wn] += (int)(dataset.get(pickupIndex[j])[wn + 4] + 0.5);
+                for(int wn = 0; wn < ohVisCount.length; wn++){
+                    ohVisCount[wn] += (int)(dataset.get(pickupIndex[j])[wn + ohVis_BIAS] + 0.5);
                 }
             }
             //avgP.eta *= 0.9; // 学習率の更新
@@ -313,8 +315,8 @@ public class avgPerceptronManager {
             strbuilder.append("average weight[" + Header[i] + "],"+avgP.avgWeight[i] + System.getProperty("line.separator"));
         }
         strbuilder.append(System.getProperty("line.separator"));
-        for(int wn = 0; wn < 5; wn++){
-            strbuilder.append("visitCount_weight[" + (wn+4) + "]," + ohVisCount[wn] + System.getProperty("line.separator"));
+        for(int wn = 0; wn < ohVisCount.length; wn++){
+            strbuilder.append("visitCount_weight[" + (wn + ohVis_BIAS) + "]," + ohVisCount[wn] + System.getProperty("line.separator"));
         }
         OutputFile(txtfilename + "_result.csv", new String(strbuilder), true);
         

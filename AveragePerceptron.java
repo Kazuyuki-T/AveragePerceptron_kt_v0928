@@ -56,7 +56,15 @@ public class AveragePerceptron {
         //String name = "gameclear_Databalancing_pickup_onehot_ar_dataadd4";
         //String name = "gameclear_Databalancing_pickup_onehot_st";
         //String name = "gameclear_Databalancing_pickup";
-        String name = "gameclear_newData_onehot_ar";
+        //String name = "gameclear_newData_onehot_ar_hpDiv04p1"; int col = 23; // 特徴量+ラベルの数
+        //String name = "gameclear_newData_onehot_hpDiv10"; int col = 19;
+        //String name = "gameclear_newData_onehot_hpDiv10_exceptHp0"; int col = 19;
+        //String name = "gameclear_newData_onehot_hpDiv04p1"; int col = 14;
+        //String name = "gameclear_newData_onehot_ar_hpDiv10_exceptHp0"; int col = 19;
+        //String name = "gameclear_newData_onehot_allitem_hp";
+        //String name = "gameclear_newData_onehot_allitem_hpdiv04p1"; int col = 26;
+        //String name = "gameclear_newData_onehot_allitem_hpdiv04p1_onlyhpresetdata"; int col = 26;
+        String name = "gameclear_newData_onehot_allitem_hpdiv04p1_mixdata"; int col = 26;
         
         // csvデータのディレクトリ
         String dir = name + "/";
@@ -79,9 +87,9 @@ public class AveragePerceptron {
         String txtfilenameWithDir;
         String imgfilenameWithDir;
         int mode = 0; // 交差検証ありなし
-        int trial = 1000;
+        int trial = 100;
         int check = 0; // テスト性能などの確認タイミング
-        int col = 13; // 特徴量+ラベルの数
+        
 //        for(int flr = 0; flr < 4; flr++){
 //            csvfilenameWithDir = dir + "data_" + flr + "f_" + name;
 //            txtfilenameWithDir = folderName + "/" + txtfilename;
@@ -92,8 +100,7 @@ public class AveragePerceptron {
         
         // テスト用
         //run(trial, mode, check, col, dir + "iris2", folderName + "/" + txtfilename, folderName + "/" + txtfilename, false);
-        avgpm.run(trial, mode, check, 13, dir + "data_2f_" + name, folderName + "/" + txtfilename, folderName + "/" + txtfilename + "_2f", false);
+        //avgpm.run(trial, mode, check, 13, dir + "data_2f_" + name, folderName + "/" + txtfilename, folderName + "/" + txtfilename + "_2f", false);
+        avgpm.run(trial, mode, check, col, dir + "data_2f_" + name, folderName + "/" + txtfilename, folderName + "/" + txtfilename + "_2f", false);
     }
-    
-    
 }
