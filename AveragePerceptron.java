@@ -64,7 +64,9 @@ public class AveragePerceptron {
         //String name = "gameclear_newData_onehot_allitem_hp";
         //String name = "gameclear_newData_onehot_allitem_hpdiv04p1"; int col = 26;
         //String name = "gameclear_newData_onehot_allitem_hpdiv04p1_onlyhpresetdata"; int col = 26;
-        String name = "gameclear_newData_onehot_allitem_hpdiv04p1_mixdata"; int col = 26;
+        //String name = "gameclear_newData_onehot_allitem_hpdiv04p1_mixdata"; int col = 26;
+        String name = "gameclear_newData_onehot_allitem_hpdiv04p1_mixdata_spDiv04p0"; int col = 30;
+        
         
         // csvデータのディレクトリ
         String dir = name + "/";
