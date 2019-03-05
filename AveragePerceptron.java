@@ -64,8 +64,18 @@ public class AveragePerceptron {
         //String name = "gameclear_newData_onehot_allitem_hp";
         //String name = "gameclear_newData_onehot_allitem_hpdiv04p1"; int col = 26;
         //String name = "gameclear_newData_onehot_allitem_hpdiv04p1_onlyhpresetdata"; int col = 26;
-        //String name = "gameclear_newData_onehot_allitem_hpdiv04p1_mixdata"; int col = 26;
-        String name = "gameclear_newData_onehot_allitem_hpdiv04p1_mixdata_spDiv04p0"; int col = 30;
+        String name = "gameclear_newData_onehot_allitem_hpdiv04p1_mixdata"; int col = 26;
+        //String name = "gameclear_newData_onehot_allitem_hpdiv04p1_mixdata_spDiv05"; int col = 31;
+        //String name = "gameclear_newData_onehot_allitem_hpdiv04p1_mixdata_spDiv04"; int col = 30;
+        //String name = "gameclear_newData_onehot_allitem_hpdiv04p1_mixdata_spDiv04p0"; int col = 30;
+        //String name = "gameclear_newData_onehot_allitem_hpdiv04p1_mixdata_spDiv04p1"; int col = 31;
+        //String name = "stairDownTiming"; int col = 7;
+        //String name = "stairDownTimingIG0"; int col = 7;
+        //String name = "stairDownTiming_col9"; int col = 9;
+        //String name = "btendTiming"; int col = 9;
+        //String name = "btendTiming_col7"; int col = 7;
+        //String name = "btendTiming_onehot_ar"; int col = 13;
+        //String name = "gameclear_newData_onehot_ar"; int col = 13;
         
         
         // csvデータのディレクトリ
@@ -89,7 +99,7 @@ public class AveragePerceptron {
         String txtfilenameWithDir;
         String imgfilenameWithDir;
         int mode = 0; // 交差検証ありなし
-        int trial = 100;
+        int trial = 1000;
         int check = 0; // テスト性能などの確認タイミング
         
 //        for(int flr = 0; flr < 4; flr++){
@@ -97,7 +107,7 @@ public class AveragePerceptron {
 //            txtfilenameWithDir = folderName + "/" + txtfilename;
 //            imgfilenameWithDir = folderName + "/" + txtfilename + "_" + flr + "f";
 //            // 学習回数，学習方法，確認タイミング，重みの数（特長量＋ラベル），ファイルネーム×３，グラフ表示の有り無し
-//            run(trial, mode, check, col, csvfilenameWithDir, txtfilenameWithDir, imgfilenameWithDir, false);
+//            avgpm.run(trial, mode, check, col, csvfilenameWithDir, txtfilenameWithDir, imgfilenameWithDir, false);
 //        }
         
         // テスト用

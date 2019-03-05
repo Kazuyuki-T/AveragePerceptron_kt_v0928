@@ -369,7 +369,7 @@ public class avgPerceptronManager {
         
         strbuilder = new StringBuilder();
         strbuilder.append(csvFile + System.getProperty("line.separator"));
-        strbuilder.append("epoch,datasize,posdata,negdata,correct,truepos,trueneg,falsepos,falseneg,accuracy,precision,recall,fmeasure" + System.getProperty("line.separator")); // index
+        strbuilder.append("epoch,datasize,posdata,negdata,correct,truepos,trueneg,falsepos,falseneg,accuracy,precision,recall,fmeasure,specificity" + System.getProperty("line.separator")); // index
         for(Map.Entry<Integer, LearningResult> entry : training_Weight.entrySet()){
             LearningResult pickup = entry.getValue();
             strbuilder.append(entry.getKey()
@@ -379,7 +379,7 @@ public class avgPerceptronManager {
                                 + "," + pickup.getTruePosNum() + "," + pickup.getTrueNegNum()
                                 + "," + pickup.getFalsePosNum() + "," + pickup.getFalseNegNum()
                                 + "," + pickup.getAccuracy()
-                                + "," + pickup.getPrecision() + "," + pickup.getRecall() + "," + pickup.getFmeasure()
+                                + "," + pickup.getPrecision() + "," + pickup.getRecall() + "," + pickup.getFmeasure() + "," + pickup.getSpecificity()
                                 + System.getProperty("line.separator")
             );
         }
@@ -389,7 +389,7 @@ public class avgPerceptronManager {
         
         strbuilder = new StringBuilder();
         strbuilder.append(csvFile + System.getProperty("line.separator"));
-        strbuilder.append("epoch,datasize,posdata,negdata,correct,truepos,trueneg,falsepos,falseneg,accuracy,precision,recall,fmeasure" + System.getProperty("line.separator")); // index
+        strbuilder.append("epoch,datasize,posdata,negdata,correct,truepos,trueneg,falsepos,falseneg,accuracy,precision,recall,fmeasure,specificity" + System.getProperty("line.separator")); // index
         for(Map.Entry<Integer, LearningResult> entry : testing_Weight.entrySet()){
             LearningResult pickup = entry.getValue();
             strbuilder.append(entry.getKey()
@@ -399,7 +399,7 @@ public class avgPerceptronManager {
                                 + "," + pickup.getTruePosNum() + "," + pickup.getTrueNegNum()
                                 + "," + pickup.getFalsePosNum() + "," + pickup.getFalseNegNum()
                                 + "," + pickup.getAccuracy()
-                                + "," + pickup.getPrecision() + "," + pickup.getRecall() + "," + pickup.getFmeasure()
+                                + "," + pickup.getPrecision() + "," + pickup.getRecall() + "," + pickup.getFmeasure() + "," + pickup.getSpecificity()
                                 + System.getProperty("line.separator")
             );
         }
@@ -409,7 +409,7 @@ public class avgPerceptronManager {
         
         strbuilder = new StringBuilder();
         strbuilder.append(csvFile + System.getProperty("line.separator"));
-        strbuilder.append("epoch,datasize,posdata,negdata,correct,truepos,trueneg,falsepos,falseneg,accuracy,precision,recall,fmeasure" + System.getProperty("line.separator")); // index
+        strbuilder.append("epoch,datasize,posdata,negdata,correct,truepos,trueneg,falsepos,falseneg,accuracy,precision,recall,fmeasure,specificity" + System.getProperty("line.separator")); // index
         for(Map.Entry<Integer, LearningResult> entry : testing_AvgWeight.entrySet()){
             LearningResult pickup = entry.getValue();
             strbuilder.append(entry.getKey()
@@ -419,7 +419,7 @@ public class avgPerceptronManager {
                                 + "," + pickup.getTruePosNum() + "," + pickup.getTrueNegNum()
                                 + "," + pickup.getFalsePosNum() + "," + pickup.getFalseNegNum()
                                 + "," + pickup.getAccuracy()
-                                + "," + pickup.getPrecision() + "," + pickup.getRecall() + "," + pickup.getFmeasure()
+                                + "," + pickup.getPrecision() + "," + pickup.getRecall() + "," + pickup.getFmeasure() + "," + pickup.getSpecificity()
                                 + System.getProperty("line.separator")
             );
         }
@@ -572,6 +572,7 @@ public class avgPerceptronManager {
         private double precision; // 精度，適合率
         private double recall; // 再現率
         private double f_measure; // f値
+        private double specificity; // 特異度
         private boolean calcFlag; // 諸々計算しているか
         
         private LearningResult(){ }
@@ -593,6 +594,7 @@ public class avgPerceptronManager {
             precision = 0;
             recall = 0;
             f_measure = 0;
+            specificity = 0;
             calcFlag = false;
         }
         
@@ -650,6 +652,10 @@ public class avgPerceptronManager {
             if(calcFlag == false) calc();
             return f_measure;
         }
+        public double getSpecificity(){
+            if(calcFlag == false) calc();
+            return specificity;
+        }
         
         private void calc(){
             accuracy = (double)correct / dataSize;
@@ -658,6 +664,7 @@ public class avgPerceptronManager {
             precision = ((double) truePosNum / (truePosNum + falsePosNum)); // 精度，適合率
             recall = ((double) truePosNum / (truePosNum + falseNegNum)); // 再現率
             f_measure = 2 * recall * precision / (recall + precision); // f値
+            specificity = ((double) trueNegNum / (trueNegNum + falsePosNum)); // 特異度
             calcFlag = true;
         }
         
@@ -677,6 +684,7 @@ public class avgPerceptronManager {
             copyLR.precision = this.precision;
             copyLR.recall = this.recall;
             copyLR.f_measure = this.f_measure;
+            copyLR.specificity = this.specificity;
             copyLR.calcFlag = this.calcFlag;
             return copyLR;
         }
@@ -688,6 +696,7 @@ public class avgPerceptronManager {
             System.out.println("    precision : " + this.precision);
             System.out.println("    recall : " + this.recall);
             System.out.println("    f_measure : " + this.f_measure);
+            System.out.println("    specificity : " + this.specificity);
             System.out.println("    testData : " + this.dataSize);
             System.out.println("    posTestData : " + this.posDataSize);
             System.out.println("    negTestData : " + this.negDataSize);
